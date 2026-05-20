@@ -7,7 +7,7 @@ const char* genreNames[] = { "Action", "Drama", "Comedy", "Horror", "SF" };
 
 static int operationCount = 0;
 
-/* ---------- CRUID ---------- */
+
 
 void createMovie(MOVIE movies[], int* count) {
     if (!count || *count >= MAX_MOVIES) {
