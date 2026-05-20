@@ -1,20 +1,21 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include "functions.h"
 
-/* extern definicija */
-const char *genreNames[] = { "Action", "Drama", "Comedy", "Horror", "SF" };
 
-/* static globalna - broji operacije, vidljiva samo ovdje */
+const char* genreNames[] = { "Action", "Drama", "Comedy", "Horror", "SF" };
+
+
 static int operationCount = 0;
 
 /* ---------- CRUID ---------- */
 
-void createMovie(MOVIE movies[], int *count) {
+void createMovie(MOVIE movies[], int* count) {
     if (!count || *count >= MAX_MOVIES) {
         printf("Nema mjesta za novi film.\n");
         return;
     }
 
-    MOVIE *m = &movies[*count];
+    MOVIE* m = &movies[*count];
 
     printf("Naziv: ");
     clearBuffer();
@@ -47,16 +48,16 @@ void readMovies(const MOVIE movies[], int count) {
     if (!movies || count == 0) { printf("Nema filmova.\n"); return; }
 
     printf("\n%-3s %-30s %-6s %-6s %-12s %s\n",
-           "Br", "Naziv", "God.", "Ocj.", "Datum", "Zanr");
+        "Br", "Naziv", "God.", "Ocj.", "Datum", "Zanr");
     printf("---------------------------------------------------------------\n");
     for (int i = 0; i < count; i++) {
         printf("%-3d %-30s %-6d %-6.1f %-12s %s\n",
-               i + 1,
-               movies[i].title,
-               movies[i].releaseYear,
-               movies[i].rating,
-               movies[i].dateWatched,
-               genreNames[movies[i].movieGenre]);
+            i + 1,
+            movies[i].title,
+            movies[i].releaseYear,
+            movies[i].rating,
+            movies[i].dateWatched,
+            genreNames[movies[i].movieGenre]);
     }
 }
 
@@ -81,11 +82,11 @@ void updateMovie(MOVIE movies[], int count) {
     printf("Film azuriran.\n");
 }
 
-void insertMovie(MOVIE movies[], int *count, int position) {
+void insertMovie(MOVIE movies[], int* count, int position) {
     if (!count || *count >= MAX_MOVIES) { printf("Nema mjesta.\n"); return; }
     if (position < 0 || position > *count) position = *count;
 
-    /* pomakni desno */
+ 
     for (int i = *count; i > position; i--)
         movies[i] = movies[i - 1];
 
@@ -94,7 +95,7 @@ void insertMovie(MOVIE movies[], int *count, int position) {
 
     /* privremeno postavi count-1 da createMovie upiše na position */
     int tmp = position;
-    MOVIE *m = &movies[position];
+    MOVIE* m = &movies[position];
 
     printf("Naziv: ");
     clearBuffer();
@@ -118,7 +119,7 @@ void insertMovie(MOVIE movies[], int *count, int position) {
     printf("Film umetnut na poziciju %d.\n", position + 1);
 }
 
-void deleteMovie(MOVIE movies[], int *count) {
+void deleteMovie(MOVIE movies[], int* count) {
     if (!movies || !count || *count == 0) { printf("Nema filmova.\n"); return; }
 
     readMovies(movies, *count);
@@ -140,12 +141,12 @@ void deleteMovie(MOVIE movies[], int *count) {
     printf("Film obrisan.\n");
 }
 
-/* ---------- DATOTEKA ---------- */
+
 
 void saveMovies(const MOVIE movies[], int count) {
     if (!movies) return;
 
-    FILE *fp = fopen(FILENAME, "wb");
+    FILE* fp = fopen(FILENAME, "wb");
     if (!fp) { perror("fopen"); return; }
 
     fwrite(&count, sizeof(int), 1, fp);
@@ -158,10 +159,10 @@ void saveMovies(const MOVIE movies[], int count) {
     fclose(fp);
 }
 
-void loadMovies(MOVIE movies[], int *count) {
+void loadMovies(MOVIE movies[], int* count) {
     if (!movies || !count) return;
 
-    FILE *fp = fopen(FILENAME, "rb");
+    FILE* fp = fopen(FILENAME, "rb");
     if (!fp) { perror("fopen"); return; }
 
     rewind(fp);
@@ -180,10 +181,10 @@ void loadMovies(MOVIE movies[], int *count) {
     fclose(fp);
 }
 
-/* ---------- SORTIRANJE (komparator = pokazivac na funkciju za qsort) ---------- */
 
-static int compareByTitle(const void *a, const void *b) {
-    return strcmp(((const MOVIE *)a)->title, ((const MOVIE *)b)->title);
+
+static int compareByTitle(const void* a, const void* b) {
+    return strcmp(((const MOVIE*)a)->title, ((const MOVIE*)b)->title);
 }
 
 void sortMovies(MOVIE movies[], int count) {
@@ -192,14 +193,14 @@ void sortMovies(MOVIE movies[], int count) {
     printf("Sortirano po naslovu.\n");
 }
 
-/* ---------- REKURZIVNI QUICKSORT ---------- */
 
-static void swapMovies(MOVIE *a, MOVIE *b) {
+
+static void swapMovies(MOVIE* a, MOVIE* b) {
     MOVIE tmp = *a; *a = *b; *b = tmp;
 }
 
 static int partition(MOVIE arr[], int low, int high) {
-    MOVIE *pivot = &arr[high];
+    MOVIE* pivot = &arr[high];
     int i = low - 1;
     for (int j = low; j < high; j++) {
         if (strcmp(arr[j].title, pivot->title) <= 0)
@@ -216,16 +217,16 @@ void quickSort(MOVIE arr[], int low, int high) {
     quickSort(arr, pi + 1, high);
 }
 
-/* ---------- PRETRAŽIVANJE (bsearch - lista mora biti sortirana) ---------- */
 
-int searchMovie(MOVIE movies[], int count, const char *title) {
+
+int searchMovie(MOVIE movies[], int count, const char* title) {
     if (!movies || !title || count == 0) return -1;
 
     MOVIE key;
     memset(&key, 0, sizeof(key));
     strncpy(key.title, title, MAX_TITLE - 1);
 
-    MOVIE *res = (MOVIE *)bsearch(&key, movies, (size_t)count, sizeof(MOVIE), compareByTitle);
+    MOVIE* res = (MOVIE*)bsearch(&key, movies, (size_t)count, sizeof(MOVIE), compareByTitle);
     if (!res) return -1;
     return (int)(res - movies);
 }
