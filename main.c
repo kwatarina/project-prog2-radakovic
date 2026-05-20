@@ -3,7 +3,8 @@
 #include "functions.h"
 
 int main(void) {
-    MOVIE movies[MAX_MOVIES];
+    MOVIE* movies = calloc(MAX_MOVIES, sizeof(MOVIE));
+    if (!movies) { fprintf(stderr, "calloc failed\n"); return 1; }
     int count = 0;
     int choice;
 
@@ -55,7 +56,7 @@ int main(void) {
             printf("Naslov za pretragu: ");
             fgets(title, MAX_TITLE, stdin);
             title[strcspn(title, "\n")] = '\0';
-            sortMovies(movies, count);  /* sortiran niz */
+            sortMovies(movies, count); 
             int idx = searchMovie(movies, count, title);
             if (idx >= 0)
                 printf("Pronadeno: %s (%d)\n", movies[idx].title, movies[idx].releaseYear);
@@ -72,5 +73,6 @@ int main(void) {
         }
     } while (choice != MENU_EXIT);
 
+    free(movies);
     return 0;
 }
