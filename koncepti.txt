@@ -1,0 +1,307 @@
+1. CRUID – Create, Read, Update, Insert, Delete
+
+void createMovie(MOVIE movies[], int* count);   // Create
+void readMovies(const MOVIE movies[], int count); // Read
+void updateMovie(MOVIE movies[], int count);    // Update
+void insertMovie(MOVIE movies[], int* count, int position); // Insert
+void deleteMovie(MOVIE movies[], int* count);   // Delete
+
+// Podaci se čuvaju u movies.bin (binarna) i movies.txt (tekstualna)
+
+
+2–3. Primitivni i složeni tipovi podataka
+
+Koriste se konkretni primitivni tipovi za cjelobrojna i realna polja, te složeni tip MOVIE struct.
+
+int    releaseYear;         // cjelobrojni tip
+float  rating;              // realni tip
+char   title[MAX_TITLE];    // znakovni niz
+MOVIE  movies[MAX_MOVIES];  // polje složenih tipova
+
+
+4. typedef, struct, enum
+
+Primjena typedef sa strukturom MOVIE, enum tipom Genre i typedef za pokazivač na funkciju.
+
+typedef enum { ACTION, DRAMA, COMEDY, HORROR, SF } Genre;
+
+typedef struct {
+   char  title[MAX_TITLE];
+   int   releaseYear;
+   float rating;
+   char  dateWatched[MAX_DATE];
+   Genre movieGenre;
+} MOVIE;
+
+typedef int (*CmpFn)(const void*, const void*); // typedef za fptr
+
+
+5. Imenovanje identifikatora
+
+Konzistentno korištenje camelCase za varijable i funkcije, PascalCase za tipove, SCREAMING_SNAKE za makro konstante.
+
+// camelCase – varijable i funkcije
+operationCount, releaseYear, dateWatched
+createMovie(), sortMoviesBy(), safeFreeMOVIES()
+
+
+6. Ključna riječ static
+
+static int operationCount = 0;
+static int  compareByTitle(const void* a, const void* b);
+static void swapMovies(MOVIE* a, MOVIE* b);
+static int  partition(MOVIE arr[], int low, int high);
+static int  compareByRating(const void* a, const void* b);
+static int  copyFile(const char* src, const char* dst);
+static int  recursiveBinarySearchYear(...);
+
+
+7. Organizacija izvornog koda
+
+Projekt je podijeljen u tri datoteke s jasno odvojenim odgovornostima.
+
+functions.h  – deklaracije, typedef, makroi, extern, inline
+functions.c  – implementacija svih funkcija
+main.c       – ulazna točka, izbornik, upravljanje memorijom
+
+
+8. Ključna riječ extern
+
+extern const char* genreNames[];
+
+const char* genreNames[] = { "Action", "Drama", "Comedy", "Horror", "SF" };
+
+
+9. inline i makro funkcije
+
+
+
+// inline funkcija u functions.h
+static inline void clearBuffer(void) {
+   int c;
+   while ((c = getchar()) != '\n' && c != EOF);
+}
+
+
+#define IS_VALID_RATING(r) ((r) >= 0.0f && (r) <= 10.0f)
+
+// korištenje u createMovie()
+if (!IS_VALID_RATING(m->rating)) m->rating = 0.0f;
+
+
+10. Izbornik i podizbornici
+
+
+// glavni izbornik
+do { ... switch(choice) { ... } } while (choice != MENU_EXIT);
+
+// podizbornik unutar MENU_SORT
+printf("  1. Naslovu\n");
+printf("  2. Ocjeni\n");
+int sub; scanf("%d", &sub);
+
+// podizbornik unutar MENU_SEARCH
+printf("  1. Naslovu\n");
+printf("  2. Godini\n");
+
+
+11. Makro simboli za izbornik
+
+
+#define MENU_ADD     1
+#define MENU_READ    2
+#define MENU_UPDATE  3
+#define MENU_DELETE  4
+#define MENU_INSERT  5
+#define MENU_SORT    6
+#define MENU_SAVE    7
+#define MENU_SEARCH  8
+#define MENU_EXIT    0
+
+
+12. Pokazivači
+
+
+MOVIE* m = &movies[*count];         // pokazivač na element polja
+MOVIE* res = (MOVIE*)bsearch(...); // pokazivač na rezultat pretrage
+MOVIE** ptr                         // dvostruki pokazivač u safeFreeMOVIES
+const char* title                   // pokazivač na string
+
+
+13. Strukture i funkcije
+
+
+
+// pristup polju strukture kroz pokazivač
+m->title, m->releaseYear, m->rating
+
+// predavanje strukture u funkciju
+void readMovies(const MOVIE movies[], int count);
+void deleteMovie(MOVIE movies[], int* count);
+
+
+14. Zaštita parametara
+
+
+
+void createMovie(MOVIE movies[], int* count) {
+   if (!count || *count >= MAX_MOVIES) { ... return; }
+
+void readMovies(const MOVIE movies[], int count) {
+   if (!movies || count == 0) { printf("Nema filmova.\n"); return; }
+
+void deleteMovie(MOVIE movies[], int* count) {
+   if (!movies || !count || *count == 0) { ... return; }
+
+int searchMovie(MOVIE movies[], int count, const char* title) {
+   if (!movies || !title || count == 0) return -1;
+
+
+15. Statički zauzeta polja (bez VLA)
+
+
+
+char buf[MAX_TITLE];  // MAX_TITLE = 100 – konstanta
+char line[256];       // fiksna veličina
+char buf[512];        // fiksna veličina u copyFile()
+
+
+16–17. Dinamička memorija – calloc / free
+
+
+MOVIE* movies = calloc(MAX_MOVIES, sizeof(MOVIE));
+
+if (!movies) {
+   fprintf(stderr, "calloc failed\n");
+   return 1;
+}
+
+
+safeFreeMOVIES(&movies);
+
+
+
+
+______________________________________________________________________________________________________
+
+
+
+18. Sigurno brisanje memorije koja je dinamički zauzeta, anuliranje memorijskog prostora, provjera
+pokazivača kako se ne bi dogodila pogreška double free() i anuliranje svih pokazivača koji su bili
+usmjereni na memorijski prostor koji se dinamički zauzeo.
+
+------------> safeFreeMovies
+
+void safeFreeMOVIES(MOVIE** ptr) {
+	if (!ptr || !*ptr) return; 
+	memset(*ptr, 0, MAX_MOVIES * sizeof(MOVIE)); 
+	free(*ptr); 
+	*ptr = NULL; 
+}
+
+
+19. Datoteke, koristiti tekstualnu ili binarnu, provjera pokazivača i zatvaranje datoteke.
+
+txt, importMoviesTXT
+
+void importMoviesTXT(MOVIE movies[], int* count) {
+	if (!movies || !count) return;
+
+	FILE* fp = fopen(FILENAME_TXT, "r");
+	if (!fp) { perror("importMoviesTXT fopen"); return; }
+
+
+20. Koristiti funkcije fseek(), ftell(), rewind(), ovisno o potrebi – neku od njih ako ne sve.
+
+importMoviesTXT - provjera jel datoteka prazna
+
+
+	fseek(fp, sizeof(int), SEEK_SET);
+	*count = (int)fread(movies, sizeof(MOVIE), (size_t)saved, fp);
+	printf("Ucitano %d filmova.\n", *count);
+	fclose(fp);
+
+
+
+21. Koristiti funkcije remove(), rename(), po potrebi implementirati funkciju za kopiranje datoteka.
+
+deleteExportFile da se obrise tekst. export datoteka
+
+void deleteExportFile(void) {
+	if (remove(FILENAME_TXT) == 0)
+		printf("Datoteka '%s' obrisana.\n", FILENAME_TXT);
+	else
+		perror("remove");
+
+22. Upravljati s pogreškama, errno, perror(), strerror(), feof(), ferror() – neku od njih ako ne sve.
+
+void saveMovies(const MOVIE movies[], int count) {
+	if (!movies) return;
+
+	FILE* fp = fopen(FILENAME, "wb");
+	if (!fp) { perror("fopen"); return; }
+
+	fwrite(&count, sizeof(int), 1, fp);
+	fwrite(movies, sizeof(MOVIE), (size_t)count, fp);
+
+	long size = ftell(fp);
+	printf("Spremljeno %d filmova (%ld bajtova).\n", count, size);
+
+	if (ferror(fp)) fprintf(stderr, "Greska: %s\n", strerror(errno));
+	fclose(fp);
+}
+
+
+
+23. Sortiranje – preporuka koristiti ugrađenu qsort() funkciju, inače se može koristiti bilo koja
+funkcija sortiranja.
+
+void sortMovies(MOVIE movies[], int count) {
+	if (!movies || count < 2) return;
+	qsort(movies, (size_t)count, sizeof(MOVIE), compareByTitle);
+	printf("Sortirano po naslovu.\n");
+}
+
+
+24. Pretraživanje – preporuka koristiti ugrađenu bsearch() funkciju, inače se može koristiti bilo koja
+funkcija pretraživanja.
+
+
+int searchMovie(MOVIE movies[], int count, const char* title) {
+	if (!movies || !title || count == 0) return -1;
+
+	MOVIE key;
+	memset(&key, 0, sizeof(key));
+	strncpy(key.title, title, MAX_TITLE - 1);
+
+	MOVIE* res = (MOVIE*)bsearch(&key, movies, (size_t)count, sizeof(MOVIE), compareByTitle);
+	if (!res) return -1;
+	return (int)(res - movies);
+}
+
+
+25. Rekurzije je najlakše koristiti primjenom rekurzivnih algoritama sortiranja kao što su quick sort,
+merge sort, insert sort ili pretraživanja kao što je binary search.
+
+static int recursiveBinarySearchYear(const MOVIE movies[], int low, int high, int year) {
+	if (low > high) return -1; /* baza rekurzije */
+	int mid = low + (high - low) / 2;
+	if (movies[mid].releaseYear == year) return mid;
+	if (movies[mid].releaseYear < year)
+		return recursiveBinarySearchYear(movies, mid + 1, high, year);
+	return recursiveBinarySearchYear(movies, low, mid - 1, year);
+}
+
+int searchMovieByYear(MOVIE movies[], int count, int year) {
+	if (!movies || count == 0) return -1;
+	sortMoviesBy(movies, count, compareByYear); 
+	return recursiveBinarySearchYear(movies, 0, count - 1, year);
+}
+
+
+26. Pokazivače na funkcije je najlakše koristiti upotrebom funkcije qsort() ili bsearch() iz standardne
+biblioteke.
+
+MOVIE* res = (MOVIE*)bsearch(&key, movies, (size_t)count, sizeof(MOVIE), compareByTitle);
+	if (!res) return -1;
+	return (int)(res - movies);
